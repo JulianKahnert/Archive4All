@@ -14,9 +14,14 @@ file_list = glob.glob(src_path + '*.tiff')
 # create PDF with OCR
 for path in file_list:
     filename, ext = os.path.splitext(os.path.basename(path))
+    if filename == 'scan':
+        os.system('mv "{}" "{}"'.format(src_path + 'scan' + ext, src_path + 'scan 0' + ext))
+        filename = 'scan 0'
+
     command = 'ocrmypdf --rotate-pages --deskew --clean --clean-final --force-ocr --output-type pdfa  --oversample 600 "{}" "{}"'.format(
         src_path + filename + ext,
         dst_path + filename + '.pdf')
+    
     print(command)
     os.system(command)
 
