@@ -5,6 +5,41 @@ import glob
 import os
 from PyPDF2 import PdfFileMerger, PdfFileReader
 
+def ocr_file(name_in, name_out=None):
+    if not name_out:
+        path = os.path.dirname(name_in)
+        filename,_ = os.path.splitext(os.path.basename(name_in))
+        name_out = path + '/' + filename + '.pdf'
+
+    command = 'ocrmypdf --language deu+eng --rotate-pages --deskew --clean --clean-final --force-ocr --output-type pdfa --oversample 600 "{}" "{}"'.format(
+        name_in,
+        name_out)
+    print(command)
+    os.system(command)
+
+
+def combine_pages():
+    # combine front and back page
+    for front_idx in range(len(file_list) // 2):
+        back_idx = len(file_list) - front_idx - 1
+        print('combining: {} + {}'.format(front_idx, back_idx))
+
+        front_path = args.destination + 'scan {}.pdf'.format(front_idx)
+        back_path = args.destination + 'scan {}.pdf'.format(back_idx)
+
+        front_pdf = PdfFileReader(open(front_path, 'rb'))
+        back_pdf = PdfFileReader(open(back_path, 'rb'))
+
+        merger = PdfFileMerger()
+        merger.append(front_pdf)
+        merger.append(back_pdf)
+        merger.write(args.destination + 'scan_combined_{}.pdf'.format(front_idx))
+
+        # delete old files
+        os.system('rm "{}"'.format(front_path))
+        os.system('rm "{}"'.format(back_path))
+
+
 
 if __name__ == "__main__":
     base_path = os.path.dirname(os.path.realpath(__file__))
@@ -28,6 +63,11 @@ if __name__ == "__main__":
                         action='store_true',
                         help='run OCR')
 
+    parser.add_argument('-ocr_folder', '--ocr_folder',
+                        dest='ocr_folder',
+                        action='store_true',
+                        help='run OCR in a hole folder')
+
     parser.add_argument('-c', '--combine',
                         dest='combine',
                         action='store_true',
@@ -39,13 +79,21 @@ if __name__ == "__main__":
                         default='tiff',
                         help='destination of OCR PDFs [default: tiff]')
 
-
     args = parser.parse_args()
-    args.source = os.path.normpath(args.source) + '/'
-    args.destination = os.path.normpath(args.destination) + '/'
-    file_list = glob.glob(args.source + '*.' + args.extension)
+    args.source = os.path.expanduser(os.path.normpath(args.source)) + '/'
+    args.destination = os.path.expanduser(os.path.normpath(args.destination)) + '/'
 
     if args.ocr:
+        if os.path.isfile(args.source):
+            # apply ocr on only one file
+            ocr_file(name_in=args.source)
+        else:
+            # apply ocr on every file in args.source
+            for file in glob.glob(args.source + '**/*.' + args.extension, recursive=True):
+                ocr_file(name_in=file)
+
+    elif args.ocr_folder:
+        file_list = glob.glob(args.source + '*.' + args.extension)
         if args.combine and not len(file_list) // 2 == len(file_list) / 2:
             raise RuntimeError('"{}" files found, this should be'.format(len(file_list)))
 
@@ -56,31 +104,8 @@ if __name__ == "__main__":
                 os.system('mv "{}" "{}"'.format(args.source + 'scan' + ext, args.source + 'scan 0' + ext))
                 filename = 'scan 0'
 
-            command = 'ocrmypdf --language deu+eng --rotate-pages --deskew --clean --clean-final --force-ocr --output-type pdfa  --oversample 600 "{}" "{}"'.format(
-                args.source + filename + ext,
-                args.destination + filename + '.pdf')
-            
-            print(command)
-            os.system(command)
+            ocr_file(name_in=args.source + filename + ext, name_out=args.destination + filename + '.pdf')
 
         if args.combine:
-            # combine front and back page
-            for front_idx in range(len(file_list) // 2):
-                back_idx = len(file_list) - front_idx - 1
-                print('combining: {} + {}'.format(front_idx, back_idx))
-
-                front_path = args.destination + 'scan {}.pdf'.format(front_idx)
-                back_path = args.destination + 'scan {}.pdf'.format(back_idx)
-
-                front_pdf = PdfFileReader(open(front_path, 'rb'))
-                back_pdf = PdfFileReader(open(back_path, 'rb'))
-
-                merger = PdfFileMerger()
-                merger.append(front_pdf)
-                merger.append(back_pdf)
-                merger.write(args.destination + 'scan_combined_{}.pdf'.format(front_idx))
-
-                # delete old files
-                os.system('rm "{}"'.format(front_path))
-                os.system('rm "{}"'.format(back_path))
+            combine_pages()
 
