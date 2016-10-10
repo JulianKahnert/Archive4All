@@ -6,13 +6,6 @@ import os
 from PyPDF2 import PdfFileMerger, PdfFileReader
 
 
-
-
-
-
-
-
-
 if __name__ == "__main__":
     base_path = os.path.dirname(os.path.realpath(__file__))
     parser = argparse.ArgumentParser(
