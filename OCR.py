@@ -56,7 +56,7 @@ if __name__ == "__main__":
                 os.system('mv "{}" "{}"'.format(args.source + 'scan' + ext, args.source + 'scan 0' + ext))
                 filename = 'scan 0'
 
-            command = 'ocrmypdf --rotate-pages --deskew --clean --clean-final --force-ocr --output-type pdfa  --oversample 600 "{}" "{}"'.format(
+            command = 'ocrmypdf --language deu+eng --rotate-pages --deskew --clean --clean-final --force-ocr --output-type pdfa  --oversample 600 "{}" "{}"'.format(
                 args.source + filename + ext,
                 args.destination + filename + '.pdf')
             
