@@ -3,42 +3,91 @@
 import argparse
 import glob
 import os
-from PyPDF2 import PdfFileMerger, PdfFileReader
 
-def ocr_file(name_in, name_out=None):
-    if not name_out:
-        path = os.path.dirname(name_in)
-        filename,_ = os.path.splitext(os.path.basename(name_in))
-        name_out = path + '/' + filename + '.pdf'
 
-    command = 'ocrmypdf --language deu+eng --rotate-pages --deskew --clean --clean-final --force-ocr --output-type pdfa --oversample 600 "{}" "{}"'.format(
-        name_in,
-        name_out)
+def ocr_file(path_in, extension='pdf', rewrite_file=False, force_ocr=False, dirty_pdf=False):
+    """
+    Run OCR for one file
+
+    Requirements:
+    https://github.com/jbarlow83/OCRmyPDF/
+
+    Parameters
+    ----------
+    path_in : string
+        Path to a file, which should be reviewed
+
+    Other Parameters
+    ----------
+    extension : string, optional
+        File extension [png, jpeg, jpg, tiff, pdf], default: 'pdf'.
+    rewrite_file : bool, optional
+        Rewrite original PDF file with OCR PDF, default: False.
+    force_ocr : bool, optional
+        Force tesseract to rewrite OCR content.
+    dirty_pdf : bool, optional
+        Save original (not cleaned) version of the PDF file.
+
+    Returns
+    -------
+    none
+
+    """
+    path_in = os.path.expanduser(os.path.normpath(path_in))
+    # apply ocr on only one file
+    if rewrite_file:
+        path_out = path_in
+    else:
+        path_base = os.path.dirname(path_in)
+        filename,_ = os.path.splitext(os.path.basename(path_in))
+        path_out = path_base + '/' + filename + '_ocr.pdf'
+
+    command = 'ocrmypdf --language deu+eng --rotate-pages --deskew --output-type pdfa --oversample 600 --clean '
+    if not dirty_pdf:
+        command += '--clean-final '
+    if force_ocr:
+        command += '--force-ocr '
+    else:
+        command += '--skip-text '
+
+    command += '"{}" "{}"'.format(path_in, path_out)
+
     print(command)
     os.system(command)
 
 
-def combine_pages():
-    # combine front and back page
-    for front_idx in range(len(file_list) // 2):
-        back_idx = len(file_list) - front_idx - 1
-        print('combining: {} + {}'.format(front_idx, back_idx))
+def ocr_folder(path_in, extension='pdf', rewrite_file=False, force_ocr=True, dirty_pdf=False):
+    """
+    Run OCR for one file
 
-        front_path = args.destination + 'scan {}.pdf'.format(front_idx)
-        back_path = args.destination + 'scan {}.pdf'.format(back_idx)
+    Requirements:
+    https://github.com/jbarlow83/OCRmyPDF/
 
-        front_pdf = PdfFileReader(open(front_path, 'rb'))
-        back_pdf = PdfFileReader(open(back_path, 'rb'))
+    Parameters
+    ----------
+    path_in : string
+        Path to folder, which should be reviewed
 
-        merger = PdfFileMerger()
-        merger.append(front_pdf)
-        merger.append(back_pdf)
-        merger.write(args.destination + 'scan_combined_{}.pdf'.format(front_idx))
+    Other Parameters
+    ----------
+    extension : string, optional
+        File extension [png, jpeg, jpg, tiff, pdf], default: 'pdf'.
+    rewrite_file : bool, optional
+        Rewrite original PDF file with OCR PDF, default: False.
+    force_ocr : bool, optional
+        Force tesseract to rewrite OCR content.
+    dirty_pdf : bool, optional
+        Save original (not cleaned) version of the PDF file.
 
-        # delete old files
-        os.system('rm "{}"'.format(front_path))
-        os.system('rm "{}"'.format(back_path))
+    Returns
+    -------
+    none
 
+    """
+    path_in = os.path.expanduser(os.path.normpath(path_in)) + '/'
+    # apply ocr on every file in path_in
+    for file in glob.glob(path_in + '**/*.' + extension, recursive=True):
+        ocr_file(path_in=file, extension=extension, rewrite_file=rewrite_file, force_ocr=force_ocr, dirty_pdf=dirty_pdf)
 
 
 if __name__ == "__main__":
@@ -46,66 +95,36 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='Commandline tool to generate searchable PDF files.')
 
-    parser.add_argument('-src', '--source',
-                        dest='source',
+    parser.add_argument('source',
                         action='store',
-                        default=base_path + '/in/',
-                        help='source of scanned files [default: REPO/in/]')
-
-    parser.add_argument('-dst', '--destination',
-                        dest='destination',
-                        action='store',
-                        default=base_path + '/out/',
-                        help='destination of OCR PDFs [default: REPO/out/]')
-
-    parser.add_argument('-ocr', '--ocr',
-                        dest='ocr',
-                        action='store_true',
-                        help='run OCR')
-
-    parser.add_argument('-ocr_folder', '--ocr_folder',
-                        dest='ocr_folder',
-                        action='store_true',
-                        help='run OCR in a hole folder')
-
-    parser.add_argument('-c', '--combine',
-                        dest='combine',
-                        action='store_true',
-                        help='combine front and back page to one pdf')
+                        help='path to scanned file/folder with files')
 
     parser.add_argument('-ext', '--extension',
                         dest='extension',
                         action='store',
-                        default='tiff',
+                        default='pdf',
                         help='destination of OCR PDFs [default: tiff]')
 
+    parser.add_argument('-d', '--delete_old_file',
+                        dest='delete_old_file',
+                        action='store_true',
+                        help='delete old file')
+
+    parser.add_argument('-f', '--force_ocr',
+                        dest='force_ocr',
+                        action='store_true',
+                        help='force tesseract to rewrite OCR content')
+
+    parser.add_argument('-dpdf', '--dirty_pdf',
+                        dest='save_dirty_pdf',
+                        action='store_true',
+                        help='not include the cleaned page in output')
+
     args = parser.parse_args()
-    args.source = os.path.expanduser(os.path.normpath(args.source)) + '/'
-    args.destination = os.path.expanduser(os.path.normpath(args.destination)) + '/'
+    args.source = os.path.expanduser(os.path.normpath(args.source))
 
-    if args.ocr:
-        if os.path.isfile(args.source):
-            # apply ocr on only one file
-            ocr_file(name_in=args.source)
-        else:
-            # apply ocr on every file in args.source
-            for file in glob.glob(args.source + '**/*.' + args.extension, recursive=True):
-                ocr_file(name_in=file)
-
-    elif args.ocr_folder:
-        file_list = glob.glob(args.source + '*.' + args.extension)
-        if args.combine and not len(file_list) // 2 == len(file_list) / 2:
-            raise RuntimeError('"{}" files found, this should be'.format(len(file_list)))
-
-        # create PDF with OCR
-        for path in file_list:
-            filename, ext = os.path.splitext(os.path.basename(path))
-            if filename == 'scan':
-                os.system('mv "{}" "{}"'.format(args.source + 'scan' + ext, args.source + 'scan 0' + ext))
-                filename = 'scan 0'
-
-            ocr_file(name_in=args.source + filename + ext, name_out=args.destination + filename + '.pdf')
-
-        if args.combine:
-            combine_pages()
+    if os.path.isfile(args.source):
+        ocr_file(path_in=args.source, extension=args.extension, rewrite_file=args.delete_old_file, force_ocr=args.force_ocr, dirty_pdf=args.save_dirty_pdf)
+    else:
+        ocr_folder(path_in=args.source, extension=args.extension, rewrite_file=args.delete_old_file, force_ocr=args.force_ocr, dirty_pdf=args.save_dirty_pdf)
 
