@@ -1,9 +1,11 @@
 # ToDos
 
+* skip file during workflow
+* delete file during workflow
 * optical improvements
 * open pdf in background
+* progress auf file-tagging
 * go a step back in workflow
-* skip a file during workflow
 * update tags: search files in folder and parse tags from names to config.ini
 
 
