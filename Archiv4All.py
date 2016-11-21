@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import argparse
 import configparser
 from datetime import date
 from datetime import datetime as dt
@@ -29,7 +28,7 @@ class archiv_file:
     def write_file(self):
         # TODO: error checking would be nice
         date = self.date.strftime('%Y-%m-%d')
-        name = self._strnorm(self.name)
+        name = _strnorm(self.name)
         tags = '_'.join(self.tags)
         ext = os.path.splitext(self._file)[-1][1:]
         filename = '{}--{}__{}.{}'.format(date, name, tags, ext)
@@ -56,14 +55,15 @@ class archiv_file:
             self._config.write(configfile)
         self._config.read(self._config_path)
 
-    def _strnorm(sz):
-        sz = sz.lower()
-        sz = sz.replace(' ', '-')
-        sz = sz.replace('ä','ae')
-        sz = sz.replace('ö','oe')
-        sz = sz.replace('ü','ue')
-        sz = sz.replace('ß','ss')
-        return sz
+
+def _strnorm(sz):
+    sz = sz.lower()
+    sz = sz.replace(' ', '-')
+    sz = sz.replace('ä','ae')
+    sz = sz.replace('ö','oe')
+    sz = sz.replace('ü','ue')
+    sz = sz.replace('ß','ss')
+    return sz
 
 def q_and_a(file_path):
     print('current file:\n' + file_path)
@@ -115,25 +115,14 @@ def q_and_a(file_path):
 
     obj.write_file()
 
+
 if __name__ == '__main__':
     path_in = os.path.expanduser(os.path.normpath(sys.argv[1]))
     print(path_in)
     if os.path.isfile(path_in):
-        print('FILE')
         q_and_a(path_in)
 
     else:
-        print('FOLDER')
         extension = 'pdf'
         for file in glob.glob(path_in + '/**/*.' + extension, recursive=True):
             q_and_a(file)
-
-    # print('=' * 10)
-    # print('\n YOUR RESULTS')
-    # print('-' * 10)
-    # print(obj.date.isoformat())
-    # print(obj.name)
-    # print(obj.tags)
-    # print('-' * 10)
-
-    # update config
