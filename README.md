@@ -4,6 +4,7 @@
 * open pdf in background
 * go a step back in workflow
 * skip a file during workflow
+* update tags: search files in folder and parse tags from names to config.ini
 
 
 # Archiv

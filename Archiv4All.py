@@ -29,13 +29,20 @@ class archiv_file:
         # TODO: error checking would be nice
         date = self.date.strftime('%Y-%m-%d')
         name = _strnorm(self.name)
+        self.tags.sort()
         tags = '_'.join(self.tags)
         ext = os.path.splitext(self._file)[-1][1:]
         filename = '{}--{}__{}.{}'.format(date, name, tags, ext)
 
+        # create a new directory if it does not already exist
         archiv_path = os.path.expanduser(self._config['dir']['archiv_path'])
+        path = '{}/{}'.format(archiv_path, self.date.year, filename)
+        if not os.path.isdir(path):
+            os.makedirs(path)
+
+        # rename and move file
         print('new file:\n' + filename)
-        os.rename(self._file, archiv_path + filename)
+        os.rename(self._file, '{}/{}'.format(path, filename))
         print('=' * 20)
 
     def _config_update(self, add_tag=[], delete_tag=[]):
@@ -118,7 +125,6 @@ def q_and_a(file_path):
 
 if __name__ == '__main__':
     path_in = os.path.expanduser(os.path.normpath(sys.argv[1]))
-    print(path_in)
     if os.path.isfile(path_in):
         q_and_a(path_in)
 
