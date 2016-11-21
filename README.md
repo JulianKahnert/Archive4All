@@ -18,3 +18,15 @@ pip3 install --upgrade pip
 pip3 install --upgrade pillow
 pip3 install ocrmypdf
 ```
+
+# `config.ini` example
+```
+[DEFAULT]
+archiv_path = ~/Downloads/test_archiv/
+
+[tags]
+TAG1
+tag2
+tag3
+tag4
+```
