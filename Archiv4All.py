@@ -42,6 +42,9 @@ class archiv_file:
 
         # rename and move file
         print('new file:\n' + filename)
+        if os.path.isfile('{}/{}'.format(path, filename)):
+            raise RuntimeError('File already exists!')
+
         os.rename(self._file, '{}/{}'.format(path, filename))
         print('=' * 20)
 
