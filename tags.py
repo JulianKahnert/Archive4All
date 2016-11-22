@@ -2,12 +2,9 @@
 
 import argparse
 import configparser
-from datetime import date
-from datetime import datetime as dt
 import glob
 import os
 from subprocess import PIPE, Popen
-import sys
 
 
 def name2tags(file):
