@@ -4,9 +4,9 @@
 * delete file during workflow
 * optical improvements
 * open pdf in background
-* progress auf file-tagging
+* progress during file-tagging
 * go a step back in workflow
-* update tags: search files in folder and parse tags from names to config.ini
+
 
 
 # Archiv
@@ -30,6 +30,14 @@ tag1
 tag2
 tag3
 
+```
+
+# Update tags in config: `tag.py`
+Requirement: `brew install tag`
+```
+./tags.py --help        # show this help message and exit
+./tags.py --config      # update tags: Archiv => config.ini
+./tags.py --mac-tags    # update macOS tags: Archiv => macOS Finder tags
 ```
 
 -------
