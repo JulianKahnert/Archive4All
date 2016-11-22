@@ -1,26 +1,38 @@
+Toolkit for file tagging and archiving tasks.
+
+--------
+
 # ToDos
 
 * skip file during workflow
 * delete file during workflow
 * optical improvements
 * open pdf in background
-* progress auf file-tagging
+* progress during file-tagging
 * go a step back in workflow
-* update tags: search files in folder and parse tags from names to config.ini
 
+--------
 
 # Archiv
-## Workflow
+### Workflow
 `./Archiv4All.py /PATH/TO/FILE/OR/FOLDER/`
 
 * **year:** 2016 or 16 possible
-* **name:** `capital letters, ' ', ä, ö, ü, ß` will be changes
+* **name:** `capital letters, ' ', ä, ö, ü, ß` will be replaced
 * **tags:**
     * select tag with number
     * write new tag (and save it to `config.ini`) with `:newtag`
     * finish tagging with empty input
 
-# `config.ini` example
+### Update tags in config: `tag.py`
+Requirement for `tag.py`: `brew install tag`
+```
+./tags.py --help        # show this help message and exit
+./tags.py --config      # update tags: Archiv => config.ini
+./tags.py --mac-tags    # update macOS tags: Archiv => macOS Finder tags
+```
+
+### `config.ini` example
 ```
 [dir]
 archiv_path = ~/Downloads/test_archiv/
@@ -39,7 +51,7 @@ tag3
 ocrmypdf --jobs 2 --rotate-pages --deskew --clean --clean-final --force-ocr --output-type pdfa  --oversample 600 SOURCE DESTINATION
 ```
 
-## Installation on macOS
+### Installation on macOS
 <https://github.com/jbarlow83/OCRmyPDF#installing-on-mac-os-x>
 ```
 brew install libpng openjpeg jbig2dec libtiff     	# image libraries
