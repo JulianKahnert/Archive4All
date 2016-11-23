@@ -2,7 +2,7 @@
 
 import configparser
 from datetime import date
-from datetime import datetime as dt
+from datetime import datetime
 import glob
 import os
 from subprocess import Popen
@@ -80,22 +80,24 @@ def q_and_a(file_path):
     p = Popen(['open', '-a', 'safari', '--background', file_path])
     print('-' * 10)
     obj = archiv_file(file_path)
+    # save creation time of file as default
+    file_date = datetime.fromtimestamp(os.path.getctime(file_path))
 
     # set year
-    year = input('Year [{}]: '.format(dt.now().year))
-    year = year or dt.now().year
+    year = input('Year [{}]: '.format(file_date.year))
+    year = year or file_date.year
     year = int(year)
     if year < 100:
         year += 2000
 
     # set month
-    month = input('Month [{}]: '.format(dt.now().month))
-    month = month or dt.now().month
+    month = input('Month [{}]: '.format(file_date.month))
+    month = month or file_date.month
     month = int(month)
 
     # set day
-    day = input('Day [{}]: '.format(dt.now().day))
-    day = day or dt.now().day
+    day = input('Day [{}]: '.format(file_date.day))
+    day = day or file_date.day
     day = int(day)
     obj.date = date(year, month, day)
 
