@@ -2,11 +2,12 @@
 
 import configparser
 from datetime import date
-from datetime import datetime as dt
+from datetime import datetime
 import glob
 import os
 from subprocess import Popen
 import sys
+from tqdm import tqdm
 
 
 class archiv_file:
@@ -44,9 +45,7 @@ class archiv_file:
         print('new file:\n' + filename)
         if os.path.isfile('{}/{}'.format(path, filename)):
             raise RuntimeError('File already exists!')
-
         os.rename(self._file, '{}/{}'.format(path, filename))
-        print('=' * 20)
 
     def _config_update(self, add_tag=[], delete_tag=[]):
         tags = list(self._config['tags'].keys())
@@ -76,26 +75,27 @@ def _strnorm(sz):
     return sz
 
 def q_and_a(file_path):
-    print('current file:\n' + file_path)
+    print('>>>  ' + file_path.split(os.path.dirname(file_path) + '/')[1] + '  <<<')
     p = Popen(['open', '-a', 'safari', '--background', file_path])
-    print('-' * 10)
     obj = archiv_file(file_path)
+    # save creation time of file as default
+    file_date = datetime.fromtimestamp(os.path.getctime(file_path))
 
     # set year
-    year = input('Year [{}]: '.format(dt.now().year))
-    year = year or dt.now().year
+    year = input('Year [{}]: '.format(file_date.year))
+    year = year or file_date.year
     year = int(year)
     if year < 100:
         year += 2000
 
     # set month
-    month = input('Month [{}]: '.format(dt.now().month))
-    month = month or dt.now().month
+    month = input('Month [{}]: '.format(file_date.month))
+    month = month or file_date.month
     month = int(month)
 
     # set day
-    day = input('Day [{}]: '.format(dt.now().day))
-    day = day or dt.now().day
+    day = input('Day [{}]: '.format(file_date.day))
+    day = day or file_date.day
     day = int(day)
     obj.date = date(year, month, day)
 
@@ -133,5 +133,5 @@ if __name__ == '__main__':
 
     else:
         extension = 'pdf'
-        for file in glob.glob(path_in + '/**/*.' + extension, recursive=True):
+        for file in tqdm(glob.glob(path_in + '/**/*.' + extension, recursive=True)):
             q_and_a(file)
