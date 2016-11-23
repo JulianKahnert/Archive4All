@@ -42,7 +42,6 @@ class archiv_file:
             os.makedirs(path)
 
         # rename and move file
-        print('new file:\n' + filename)
         if os.path.isfile('{}/{}'.format(path, filename)):
             raise RuntimeError('File already exists!')
         os.rename(self._file, '{}/{}'.format(path, filename))
