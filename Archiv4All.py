@@ -77,7 +77,7 @@ def _strnorm(sz):
 
 def q_and_a(file_path):
     print('current file:\n' + file_path)
-    p = Popen(['open', '-a', 'safari', file_path])
+    p = Popen(['open', '-a', 'safari', '--background', file_path])
     print('-' * 10)
     obj = archiv_file(file_path)
 

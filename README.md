@@ -4,12 +4,10 @@ Toolkit for file tagging and archiving tasks.
 
 # ToDos
 
-* skip file during workflow
-* delete file during workflow
-* optical improvements
-* open pdf in background
+* during workflow: skip/delete file
+* during workflow: go one step back
+* improve interface
 * progress during file-tagging
-* go a step back in workflow
 
 --------
 
