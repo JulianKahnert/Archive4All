@@ -217,7 +217,7 @@ class ArchiveFile:
         self._config_path = os.path.join(self._basepath, 'config.ini')
         self._config.read(self._config_path)
 
-        self._config_tags = list(self._config['tags'].keys())
+        self._config_tags = list(self._config['Tags'].keys())
 
         # file attributes
         self.date = None
@@ -234,7 +234,8 @@ class ArchiveFile:
         filename = '{}--{}__{}.{}'.format(date, name, tags, ext)
 
         # create a new directory if it does not already exist
-        archive_path = os.path.expanduser(self._config['dir']['archive_path'])
+        archive_path = os.path.expanduser(
+            self._config['Directories']['archive_path'])
         path = '{}/{}'.format(archive_path, self.date.year, filename)
         if not os.path.isdir(path):
             os.makedirs(path)

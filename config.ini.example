@@ -1,7 +1,12 @@
-[dir]
-archiv_path = ~/Downloads/test_archiv/
+[Directories]
 
-[tags]
+; Multiple input paths can be defined by being placed in a JSON list
+input_paths = ["~/Documents/test_documents", ]
+
+; Only one output path is allowed (therefore no JSON here)
+output_path = ~/Downloads/test_archive/
+
+[Tags]
 tag1
 tag2
 tag3
