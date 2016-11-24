@@ -124,11 +124,8 @@ class ArchiveToolkit:
                 raise Exception('Config file already exists.')
 
             from shutil import copyfile
-            copyfile(os.path.join(self._basepath,self._config_file_example),
-                     os.path.join(self._basepath,self._config_file))
-
-
-
+            copyfile(os.path.join(self._basepath, self._config_file_example),
+                     os.path.join(self._basepath, self._config_file))
 
     def main(self):
         """
@@ -142,7 +139,6 @@ class ArchiveToolkit:
         self.parse_config_file()
 
         self.process_files()
-
 
     def process_files(self):
         input_list = args.directory_list + args.file_list
@@ -212,7 +208,6 @@ class ArchiveToolkit:
         obj.write_file()
 
 
-
 class ArchiveFile:
     def __init__(self, file):
         # TODO: relative path to absolute path?
@@ -275,7 +270,6 @@ def _strnorm(sz):
     sz = sz.replace('ü', 'ue')
     sz = sz.replace('ß', 'ss')
     return sz
-
 
 
 if __name__ == '__main__':
