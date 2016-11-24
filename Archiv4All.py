@@ -55,13 +55,16 @@ class append_readable_file(argparse.Action):
 
 
 class ArchiveToolkit:
+
+    _config_file = 'config.ini'
+    _config_file_example = 'config.ini.example'
+
     def __init__(self):
-        pass
+        self._basepath = os.path.dirname(os.path.realpath(__file__))
+        self._config_path = os.path.join(self._basepath, self._config_file)
 
     def parse_config_file(self):
         self._config = configparser.ConfigParser(allow_no_value=True)
-        self._basepath = os.path.dirname(os.path.realpath(__file__))
-        self._config_path = os.path.join(self._basepath, 'config.ini')
         self._config.read(self._config_path)
 
         if len(self._config.sections()) == 0:
@@ -89,8 +92,54 @@ class ArchiveToolkit:
             file. Of course it is allowed to use glob patterns (i.e.
             "path/to/*.pdf").
                             ''')
+        parser.add_argument('-c', '--config',
+                            metavar='CONFIGFILE', dest='config_file',
+                            default=self._config_path,
+                            help='''
+            Change the path to the config file to wherever you want. By default
+            the config.ini is loaded from the Toolkit's base directory. Both
+            absolute and relative paths are allowed, with the latter of course
+            being relative to the current working directory
+                            ''')
+        parser.add_argument('-nc', '--new-config',
+                            dest='new_config',
+                            action='store_true',
+                            help='''
+            When this option is set, the Toolkit will simply create a new
+            config file in the default location an exit. A neat little shortcut
+            for copying the example configuration file. In conjunction with -c/
+            --config this will cause the config to be created in a non-default
+            place.
+                            ''')
 
         self._args = parser.parse_args()
+
+        # Overwrite current config file/path
+        self._config_file = os.path.basename(self._args.config_file)
+        self._config_path = self._args.config_file
+
+        # Copy example config to new location
+        if self._args.new_config:
+            if os.path.isfile(self._config_path):
+                raise Exception('Config file already exists.')
+
+            from shutil import copyfile
+            copyfile(os.path.join(self._basepath,self._config_file_example),
+                     os.path.join(self._basepath,self._config_file))
+
+
+
+
+    def main(self):
+        """
+        Main method to run everything in ArchiveToolkit the way it's
+        intended to be. When called directly (not from inside another Python
+        function or shell) this function handles parsing of config, command
+        line arguments, and –after that— the processing of the given files.
+        """
+
+        self.parse_command_line()
+        self.parse_config_file()
 
 
     def process_files(self):
