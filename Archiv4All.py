@@ -70,6 +70,23 @@ class ArchiveToolkit:
         if len(self._config.sections()) == 0:
             raise Exception('Config file is empty or does not exist.')
 
+    def update_config_file(self, add_tag=[], delete_tag=[]):
+        tags = list(self._config['Tags'].keys())
+        for item in add_tag:
+            tags.append(add_tag)
+        for item in delete_tag:
+            tags.remove(item)
+        tags.sort()
+
+        self._config.remove_section('Tags')
+        self._config.add_section('Tags')
+        for cur_tag in tags:
+            self._config.set('Tags', cur_tag)
+
+        with open(self._config_path, 'w') as configfile:
+            self._config.write(configfile)
+        self.parse_config_file()
+
     def parse_command_line(self):
         parser = argparse.ArgumentParser(description='''
             Archive4All – Toolkit for file tagging and archiving tasks.
@@ -244,23 +261,6 @@ class ArchiveFile:
         if os.path.isfile('{}/{}'.format(path, filename)):
             raise RuntimeError('File already exists!')
         os.rename(self._file, '{}/{}'.format(path, filename))
-
-    def _config_update(self, add_tag=[], delete_tag=[]):
-        tags = list(self._config['tags'].keys())
-        for item in add_tag:
-            tags.append(add_tag)
-        for item in delete_tag:
-            tags.remove(item)
-        tags.sort()
-
-        self._config.remove_section('tags')
-        self._config.add_section('tags')
-        for cur_tag in tags:
-            self._config.set('tags', cur_tag)
-
-        with open(self._config_path, 'w') as configfile:
-            self._config.write(configfile)
-        self._config.read(self._config_path)
 
 
 def _strnorm(sz):
