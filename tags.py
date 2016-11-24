@@ -58,6 +58,10 @@ if __name__ == '__main__':
             config.write(configfile)
 
     if args.mac_tags:
+        # store number of deleted and added tags
+        num_del_tags = 0
+        num_add_tags = 0
+
         for cur_file in glob.glob(archiv_path + '/**/*.*', recursive=True):
             p = Popen(['tag', '--list', '--garrulous', '--no-name', cur_file], stdout=PIPE)
             attr_tags = p.stdout.read().decode("utf-8")[:-1]
@@ -67,7 +71,11 @@ if __name__ == '__main__':
             # delete tags from attr
             for attr in attr_tags - name_tags:
                 Popen(['tag', '--remove', attr, cur_file])
+                num_del_tags += 1
 
             # add tags to attr
             for attr in name_tags - attr_tags:
                 Popen(['tag', '--add', attr, cur_file])
+                num_add_tags += 1
+
+        print('tags:\n\t{} added\n\t{} deleted'.format(num_add_tags, num_del_tags))
