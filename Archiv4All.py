@@ -67,14 +67,15 @@ class archiv_file:
 def _strnorm(sz):
     sz = sz.lower()
     sz = sz.replace(' ', '-')
-    sz = sz.replace('ä','ae')
-    sz = sz.replace('ö','oe')
-    sz = sz.replace('ü','ue')
-    sz = sz.replace('ß','ss')
+    sz = sz.replace('ä', 'ae')
+    sz = sz.replace('ö', 'oe')
+    sz = sz.replace('ü', 'ue')
+    sz = sz.replace('ß', 'ss')
     return sz
 
+
 def q_and_a(file_path):
-    print('>>>  ' + file_path.split(os.path.dirname(file_path) + '/')[1] + '  <<<')
+    print('>>>  ' + file_path.split(os.path.dirname(file_path) + '/')[1])
     p = Popen(['open', '-a', 'safari', '--background', file_path])
     obj = archiv_file(file_path)
     # save creation time of file as default
@@ -132,5 +133,6 @@ if __name__ == '__main__':
 
     else:
         extension = 'pdf'
-        for file in tqdm(glob.glob(path_in + '/**/*.' + extension, recursive=True)):
+        for file in tqdm(glob.glob(path_in + '/**/*.' + extension,
+                                   recursive=True)):
             q_and_a(file)
