@@ -64,3 +64,13 @@ pip3 install --upgrade pip
 pip3 install --upgrade pillow
 pip3 install ocrmypdf
 ```
+
+### Installation on Ubuntu 16.04 (Xenial)
+
+```
+sudo apt install tesseract-ocr tesseract-ocr-deu tesseract-ocr-eng \
+                 unpaper qpdf ghostscript
+
+pip3 install --upgrade pip
+pip3 install --user ocrmypdf
+```
