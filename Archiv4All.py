@@ -54,6 +54,61 @@ class append_readable_file(argparse.Action):
                 setattr(namespace, self.dest, file_list)
 
 
+class ArchiveToolkit:
+    def __init__(self):
+        pass
+
+    def parse_config_file(self):
+        self._config = configparser.ConfigParser(allow_no_value=True)
+        self._basepath = os.path.dirname(os.path.realpath(__file__))
+        self._config_path = os.path.join(self._basepath, 'config.ini')
+        self._config.read(self._config_path)
+
+        if len(self._config.sections()) == 0:
+            raise Exception('Config file is empty or does not exist.')
+
+    def parse_command_line(self):
+        parser = argparse.ArgumentParser(description='''
+            Archive4All – Toolkit for file tagging and archiving tasks.
+                                         ''',
+                                         fromfile_prefix_chars="@")
+        parser.add_argument('-d', '--dir',
+                            metavar='DIRECTORY', dest='directory_list',
+                            action=append_readable_dir, default=[],
+                            help='''
+            Add files from the existing and readable DIRECTORY for processing.
+            This option may be used multiple times, each time adding another
+            directory.
+                            ''')
+        parser.add_argument('-f', '--file',
+                            metavar='FILE', dest='file_list',
+                            action=append_readable_file, default=[],
+                            help='''
+            Add an existing and reable FILE for processing. Just as -d/--dir
+            this option may be used multiple times, each time adding another
+            file. Of course it is allowed to use glob patterns (i.e.
+            "path/to/*.pdf").
+                            ''')
+
+        self._args = parser.parse_args()
+
+
+    def process_files(self):
+        input_list = args.directory_list + args.file_list
+        if len(input_list) == 0:
+            parser.print_usage()
+        else:
+            for path_in in tqdm(input_list):
+                if os.path.isfile(path_in):
+                    q_and_a(path_in)
+                else:
+                    extension = 'pdf'
+                    for path_in in tqdm(glob.glob(path_in + '/**/*.' + extension,
+                                               recursive=True)):
+                        q_and_a(path_in)
+
+
+
 class archiv_file:
     def __init__(self, file):
         # TODO: relative path to absolute path?
@@ -171,12 +226,6 @@ def q_and_a(file_path):
 
 
 if __name__ == '__main__':
-    path_in = os.path.expanduser(os.path.normpath(sys.argv[1]))
-    if os.path.isfile(path_in):
-        q_and_a(path_in)
 
-    else:
-        extension = 'pdf'
-        for file in tqdm(glob.glob(path_in + '/**/*.' + extension,
-                                   recursive=True)):
-            q_and_a(file)
+    at = ArchiveToolkit()
+    at.main()
