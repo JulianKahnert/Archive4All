@@ -163,7 +163,7 @@ class ArchiveToolkit:
     def q_and_a(file_path):
         print('>>>  ' + file_path.split(os.path.dirname(file_path) + '/')[1])
         p = Popen(['open', '-a', 'safari', '--background', file_path])
-        obj = archiv_file(file_path)
+        obj = ArchiveFile(file_path)
         # save creation time of file as default
         file_date = datetime.fromtimestamp(os.path.getctime(file_path))
 
@@ -213,7 +213,7 @@ class ArchiveToolkit:
 
 
 
-class archiv_file:
+class ArchiveFile:
     def __init__(self, file):
         # TODO: relative path to absolute path?
         self._file = os.path.expanduser(file)
@@ -239,8 +239,8 @@ class archiv_file:
         filename = '{}--{}__{}.{}'.format(date, name, tags, ext)
 
         # create a new directory if it does not already exist
-        archiv_path = os.path.expanduser(self._config['dir']['archiv_path'])
-        path = '{}/{}'.format(archiv_path, self.date.year, filename)
+        archive_path = os.path.expanduser(self._config['dir']['archive_path'])
+        path = '{}/{}'.format(archive_path, self.date.year, filename)
         if not os.path.isdir(path):
             os.makedirs(path)
 
