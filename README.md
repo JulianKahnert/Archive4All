@@ -46,7 +46,7 @@ tag3
 
 # OCR
 ```
-ocrmypdf --jobs 2 --rotate-pages --deskew --clean --clean-final --force-ocr --output-type pdfa  --oversample 600 SOURCE DESTINATION
+ocrmypdf -l deu+eng --jobs 2 --rotate-pages --deskew --clean --clean-final --force-ocr --output-type pdfa  --oversample 600 SOURCE DESTINATION
 ```
 
 ### Installation on macOS
