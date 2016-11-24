@@ -8,6 +8,50 @@ import os
 from subprocess import Popen
 import sys
 from tqdm import tqdm
+import argparse
+
+
+# Partly inspired by https://stackoverflow.com/a/11415816/1177851
+class append_readable_dir(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        input_dir = os.path.expanduser(values)
+
+        if not os.path.isdir(input_dir):
+            raise argparse.ArgumentTypeError(
+                "readable_dir:{0} is not valid".format(input_dir))
+
+        if os.access(input_dir, os.R_OK):
+            dir_list = argparse._copy.copy(
+                argparse._ensure_value(namespace, self.dest, []))
+            dir_list.append(input_dir)
+            setattr(namespace, self.dest, dir_list)
+        else:
+            raise argparse.ArgumentTypeError(
+                "readable_dir:{0} is not readable".format(input_dir))
+
+
+class append_readable_file(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        input_files = glob.glob(os.path.expanduser(values))
+        temp_list = []
+
+        for input_file in input_files:
+            print(input_file)
+            if not os.path.isfile(input_file):
+                raise argparse.ArgumentTypeError(
+                    "readable_file:{0} is not valid".format(input_file))
+
+            if os.access(input_file, os.R_OK):
+                temp_list.append(input_file)
+            else:
+                raise argparse.ArgumentTypeError(
+                    "readable_file:{0} is not readable".format(input_file))
+
+            if len(temp_list) > 0:
+                file_list = argparse._copy.copy(
+                    argparse._ensure_value(namespace, self.dest, []))
+                file_list = file_list + temp_list
+                setattr(namespace, self.dest, file_list)
 
 
 class archiv_file:
