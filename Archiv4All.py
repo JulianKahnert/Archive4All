@@ -141,6 +141,8 @@ class ArchiveToolkit:
         self.parse_command_line()
         self.parse_config_file()
 
+        self.process_files()
+
 
     def process_files(self):
         input_list = args.directory_list + args.file_list
@@ -149,12 +151,65 @@ class ArchiveToolkit:
         else:
             for path_in in tqdm(input_list):
                 if os.path.isfile(path_in):
-                    q_and_a(path_in)
+                    self.q_and_a(path_in)
                 else:
                     extension = 'pdf'
-                    for path_in in tqdm(glob.glob(path_in + '/**/*.' + extension,
-                                               recursive=True)):
-                        q_and_a(path_in)
+                    for path_in in tqdm(glob.glob(path_in +
+                                                  '/**/*.' +
+                                                  extension,
+                                                  recursive=True)):
+                        self.q_and_a(path_in)
+
+    def q_and_a(file_path):
+        print('>>>  ' + file_path.split(os.path.dirname(file_path) + '/')[1])
+        p = Popen(['open', '-a', 'safari', '--background', file_path])
+        obj = archiv_file(file_path)
+        # save creation time of file as default
+        file_date = datetime.fromtimestamp(os.path.getctime(file_path))
+
+        # set year
+        year = input('Year [{}]: '.format(file_date.year))
+        year = year or file_date.year
+        year = int(year)
+        if year < 100:
+            year += 2000
+
+        # set month
+        month = input('Month [{}]: '.format(file_date.month))
+        month = month or file_date.month
+        month = int(month)
+
+        # set day
+        day = input('Day [{}]: '.format(file_date.day))
+        day = day or file_date.day
+        day = int(day)
+        obj.date = date(year, month, day)
+
+        # set name
+        obj.name = input('Name: ')
+        # TODO: error if empty
+
+        # set tags
+        print('\nID: name')
+        print('-' * 10)
+        for cur_tag in obj._config_tags:
+            print('{}: {}'.format(obj._config_tags.index(cur_tag), cur_tag))
+
+        obj.tags = []
+        while True:
+            print('\ncurrent tags:')
+            print(obj.tags)
+            ans = input('choose tag ID or write tag: ')
+            if ans == '':
+                break
+
+            if ans[0] == ':':
+                obj.tags.append(ans[1:])
+                obj._config_update(add_tag=ans[1:])
+            else:
+                obj.tags.append(obj._config_tags[int(ans)])
+
+        obj.write_file()
 
 
 
@@ -221,57 +276,6 @@ def _strnorm(sz):
     sz = sz.replace('ß', 'ss')
     return sz
 
-
-def q_and_a(file_path):
-    print('>>>  ' + file_path.split(os.path.dirname(file_path) + '/')[1])
-    p = Popen(['open', '-a', 'safari', '--background', file_path])
-    obj = archiv_file(file_path)
-    # save creation time of file as default
-    file_date = datetime.fromtimestamp(os.path.getctime(file_path))
-
-    # set year
-    year = input('Year [{}]: '.format(file_date.year))
-    year = year or file_date.year
-    year = int(year)
-    if year < 100:
-        year += 2000
-
-    # set month
-    month = input('Month [{}]: '.format(file_date.month))
-    month = month or file_date.month
-    month = int(month)
-
-    # set day
-    day = input('Day [{}]: '.format(file_date.day))
-    day = day or file_date.day
-    day = int(day)
-    obj.date = date(year, month, day)
-
-    # set name
-    obj.name = input('Name: ')
-    # TODO: error if empty
-
-    # set tags
-    print('\nID: name')
-    print('-' * 10)
-    for cur_tag in obj._config_tags:
-        print('{}: {}'.format(obj._config_tags.index(cur_tag), cur_tag))
-
-    obj.tags = []
-    while True:
-        print('\ncurrent tags:')
-        print(obj.tags)
-        ans = input('choose tag ID or write tag: ')
-        if ans == '':
-            break
-
-        if ans[0] == ':':
-            obj.tags.append(ans[1:])
-            obj._config_update(add_tag=ans[1:])
-        else:
-            obj.tags.append(obj._config_tags[int(ans)])
-
-    obj.write_file()
 
 
 if __name__ == '__main__':
