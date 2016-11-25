@@ -46,7 +46,7 @@ tag3
 
 # OCR
 ```
-ocrmypdf --jobs 2 --rotate-pages --deskew --clean --clean-final --force-ocr --output-type pdfa  --oversample 600 SOURCE DESTINATION
+ocrmypdf -l deu+eng --jobs 2 --rotate-pages --deskew --clean --clean-final --force-ocr --output-type pdfa  --oversample 600 SOURCE DESTINATION
 ```
 
 ### Installation on macOS
@@ -63,4 +63,14 @@ brew install tesseract --with-all-languages 		# nessasary for german language an
 pip3 install --upgrade pip
 pip3 install --upgrade pillow
 pip3 install ocrmypdf
+```
+
+### Installation on Ubuntu 16.04 (Xenial)
+
+```
+sudo apt install tesseract-ocr tesseract-ocr-deu tesseract-ocr-eng \
+                 unpaper qpdf ghostscript
+
+pip3 install --upgrade pip
+pip3 install --user ocrmypdf
 ```

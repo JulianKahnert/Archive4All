@@ -35,7 +35,7 @@ if __name__ == '__main__':
 
     config = configparser.ConfigParser(allow_no_value=True)
     config.read(config_path)
-    archiv_path = os.path.expanduser(config['dir']['archiv_path'])
+    archiv_path = os.path.expanduser(config['Directories']['output_path'])
 
     if args.config:
         # get all tags
@@ -46,12 +46,12 @@ if __name__ == '__main__':
         tag_list.sort()
 
         # renew tags in config.ini
-        config.remove_section('tags')
-        config.add_section('tags')
+        config.remove_section('Tags')
+        config.add_section('Tags')
         print('All tags in archiv:\n' + '-'*20)
         for cur_tag in tag_list:
             print('{}: {}'.format(tag_list.index(cur_tag), cur_tag))
-            config.set('tags', cur_tag)
+            config.set('Tags', cur_tag)
 
         # write new config.ini
         with open(config_path, 'w') as configfile:
