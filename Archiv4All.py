@@ -202,7 +202,7 @@ class ArchiveToolkit:
 
     def q_and_a(self, file_path):
         print('>>>  ' + file_path.split(os.path.dirname(file_path) + '/')[1])
-        p = Popen(['open', '--background', file_path])
+        p = Popen(['open', '--background', '-a', 'safari', file_path])
         obj = ArchiveFile(self, file_path)
         # save creation time of file as default
 
@@ -256,6 +256,7 @@ class ArchiveToolkit:
 
             # A non-match will be added as a new tag
             else:
+                ans = ans.lower()
                 obj.tags.append(ans)
                 self.update_config_file(add_tag=ans)
 
