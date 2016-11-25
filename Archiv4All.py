@@ -11,6 +11,7 @@ from tqdm import tqdm
 import argparse
 import json
 from shutil import copyfile, move
+import re
 
 
 # Partly inspired by https://stackoverflow.com/a/11415816/1177851
@@ -83,17 +84,29 @@ class ArchiveToolkit:
         self.file_list = self.file_list + glob_directory(input_paths,
                                                          self._file_extension)
 
-    def update_config_file(self, add_tag=[], delete_tag=[]):
-        tags = list(self._config['Tags'].keys())
+        self.archive_path = os.path.expanduser(
+                            self._config['Directories'].get('output_path'))
+        if self.archive_path is None:
+            raise Exception('No output path specified.')
+
+        self.tag_list = list(self._config['Tags'].keys())
+        if len(self.tag_list) == 0:
+            raise Exception('No tags specified.')
+
+        self._movefile = self._config['Defaults'].get('copy_or_move') == 'move'
+
+    def update_config_file(self, add_tag=[], delete_tag=[], sort_tags=False):
         for item in add_tag:
-            tags.append(add_tag)
+            self.tag_list.append(add_tag)
         for item in delete_tag:
-            tags.remove(item)
-        tags.sort()
+            self.tag_list.remove(item)
+
+        if sort_tags:
+            self.tag_list.sort()
 
         self._config.remove_section('Tags')
         self._config.add_section('Tags')
-        for cur_tag in tags:
+        for cur_tag in self.tag_list:
             self._config.set('Tags', cur_tag)
 
         with open(self._config_path, 'w') as configfile:
@@ -166,13 +179,6 @@ class ArchiveToolkit:
         input_files = self._args.file_list
         self.file_list = self.file_list + input_files
 
-        self.archive_path = os.path.expanduser(
-                    self._config['Directories'].get('output_path'))
-        if self.archive_path is None:
-            raise Exception('No output path specified.')
-
-
-
     def main(self):
         """
         Main method to run everything in ArchiveToolkit the way it's
@@ -197,25 +203,24 @@ class ArchiveToolkit:
     def q_and_a(self, file_path):
         print('>>>  ' + file_path.split(os.path.dirname(file_path) + '/')[1])
         p = Popen(['open', '--background', file_path])
-        obj = ArchiveFile(file_path, self.archive_path)
+        obj = ArchiveFile(self, file_path)
         # save creation time of file as default
-        file_date = datetime.fromtimestamp(os.path.getctime(file_path))
 
         # set year
-        year = input('Year [{}]: '.format(file_date.year))
-        year = year or file_date.year
+        year = input('Year [{}]: '.format(obj.file_date.year))
+        year = year or obj.file_date.year
         year = int(year)
         if year < 100:
             year += 2000
 
         # set month
-        month = input('Month [{}]: '.format(file_date.month))
-        month = month or file_date.month
+        month = input('Month [{}]: '.format(obj.file_date.month))
+        month = month or obj.file_date.month
         month = int(month)
 
         # set day
-        day = input('Day [{}]: '.format(file_date.day))
-        day = day or file_date.day
+        day = input('Day [{}]: '.format(obj.file_date.day))
+        day = day or obj.file_date.day
         day = int(day)
         obj.date = date(year, month, day)
 
@@ -226,36 +231,44 @@ class ArchiveToolkit:
         # set tags
         print('\nID: name')
         print('-' * 10)
-        for cur_tag in obj._config_tags:
-            print('{}: {}'.format(obj._config_tags.index(cur_tag), cur_tag))
+        for idx, cur_tag in enumerate(self.tag_list):
+            print('{}: {}'.format(idx, cur_tag))
 
         obj.tags = []
         while True:
             print('\ncurrent tags:')
             print(obj.tags)
             ans = input('choose tag ID or write tag: ')
+
+            # Empty string exits the loop
             if ans == '':
                 break
 
-            if ans[0] == ':':
-                obj.tags.append(ans[1:])
-                obj._config_update(add_tag=ans[1:])
+            # A regex match for digit-only value is interpreted as ID
+            matched_numeral = re.match('^(\d+)$', ans)
+            if matched_numeral is not None:
+                try:
+                    obj.tags.append(self.tag_list[
+                        int(matched_numeral.group(0))])
+                except IndexError:
+                    print('No tag with that ID.')
+                    continue
+
+            # A non-match will be added as a new tag
             else:
-                obj.tags.append(obj._config_tags[int(ans)])
+                obj.tags.append(ans)
+                self.update_config_file(add_tag=ans)
 
         obj.write_file()
 
 
 class ArchiveFile:
-    def __init__(self, file, archive_path):
+    def __init__(self, toolkit, file_in):
         # TODO: relative path to absolute path?
-        self._file = os.path.expanduser(file)
-        self._config = configparser.ConfigParser(allow_no_value=True)
+        self._file = file_in
+        self._toolkit = toolkit
         self._basepath = os.path.dirname(os.path.realpath(__file__))
-        self._config_path = os.path.join(self._basepath, 'config.ini')
-        self._config.read(self._config_path)
-
-        self._config_tags = list(self._config['Tags'].keys())
+        self.file_date = datetime.fromtimestamp(os.path.getctime(self._file))
 
         # file attributes
         self.date = None
@@ -272,8 +285,11 @@ class ArchiveFile:
         filename = '{}--{}__{}.{}'.format(date, name, tags, ext)
 
         # create a new directory if it does not already exist
-        target_path = os.path.join(archive_path, self.date.year)
-        target_file = os.path.join(archive_path, self.date.year, filename)
+        target_path = os.path.join(self._toolkit.archive_path,
+                                   self.date.strftime('%Y'))
+        target_file = os.path.join(self._toolkit.archive_path,
+                                   self.date.strftime('%Y'), filename)
+
         if not os.path.isdir(target_path):
             os.makedirs(target_path)
 
@@ -281,11 +297,10 @@ class ArchiveFile:
         if os.path.isfile(target_file):
             raise RuntimeError('File already exists!')
 
-        self._copyfile = True
-        if self._copyfile:
-            copyfile(self._file, target_file)
-        else:
+        if self._toolkit._movefile:
             move(self._file, target_file)
+        else:
+            copyfile(self._file, target_file)
 
 
 def _strnorm(sz):
