@@ -9,6 +9,8 @@ from subprocess import Popen
 import sys
 from tqdm import tqdm
 import argparse
+import json
+from shutil import copyfile, move
 
 
 # Partly inspired by https://stackoverflow.com/a/11415816/1177851
@@ -58,6 +60,9 @@ class ArchiveToolkit:
 
     _config_file = 'config.ini'
     _config_file_example = 'config.ini.example'
+    _file_extension = '.pdf'
+
+    file_list = []
 
     def __init__(self):
         self._basepath = os.path.dirname(os.path.realpath(__file__))
@@ -69,6 +74,14 @@ class ArchiveToolkit:
 
         if len(self._config.sections()) == 0:
             raise Exception('Config file is empty or does not exist.')
+
+        input_paths = self._config['Directories'].get('input_paths')
+        if input_paths is not None:
+            input_paths = [os.path.expanduser(in_path) for in_path in
+                           json.loads(input_paths)]
+
+        self.file_list = self.file_list + glob_directory(input_paths,
+                                                         self._file_extension)
 
     def update_config_file(self, add_tag=[], delete_tag=[]):
         tags = list(self._config['Tags'].keys())
@@ -144,6 +157,22 @@ class ArchiveToolkit:
             copyfile(os.path.join(self._basepath, self._config_file_example),
                      os.path.join(self._basepath, self._config_file))
 
+            return
+
+        input_paths = self._args.directory_list
+        self.file_list = self.file_list + glob_directory(input_paths,
+                                                         self._file_extension)
+
+        input_files = self._args.file_list
+        self.file_list = self.file_list + input_files
+
+        self.archive_path = os.path.expanduser(
+                    self._config['Directories'].get('output_path'))
+        if self.archive_path is None:
+            raise Exception('No output path specified.')
+
+
+
     def main(self):
         """
         Main method to run everything in ArchiveToolkit the way it's
@@ -158,25 +187,17 @@ class ArchiveToolkit:
         self.process_files()
 
     def process_files(self):
-        input_list = args.directory_list + args.file_list
-        if len(input_list) == 0:
-            parser.print_usage()
-        else:
-            for path_in in tqdm(input_list):
-                if os.path.isfile(path_in):
-                    self.q_and_a(path_in)
-                else:
-                    extension = 'pdf'
-                    for path_in in tqdm(glob.glob(path_in +
-                                                  '/**/*.' +
-                                                  extension,
-                                                  recursive=True)):
-                        self.q_and_a(path_in)
 
-    def q_and_a(file_path):
+        if len(self.file_list) == 0:
+            raise Exception('No files have been added for processing.')
+
+        for path in tqdm(self.file_list):
+            self.q_and_a(path)
+
+    def q_and_a(self, file_path):
         print('>>>  ' + file_path.split(os.path.dirname(file_path) + '/')[1])
-        p = Popen(['open', '-a', 'safari', '--background', file_path])
-        obj = ArchiveFile(file_path)
+        p = Popen(['open', '--background', file_path])
+        obj = ArchiveFile(file_path, self.archive_path)
         # save creation time of file as default
         file_date = datetime.fromtimestamp(os.path.getctime(file_path))
 
@@ -226,7 +247,7 @@ class ArchiveToolkit:
 
 
 class ArchiveFile:
-    def __init__(self, file):
+    def __init__(self, file, archive_path):
         # TODO: relative path to absolute path?
         self._file = os.path.expanduser(file)
         self._config = configparser.ConfigParser(allow_no_value=True)
@@ -251,16 +272,20 @@ class ArchiveFile:
         filename = '{}--{}__{}.{}'.format(date, name, tags, ext)
 
         # create a new directory if it does not already exist
-        archive_path = os.path.expanduser(
-            self._config['Directories']['archive_path'])
-        path = '{}/{}'.format(archive_path, self.date.year, filename)
-        if not os.path.isdir(path):
-            os.makedirs(path)
+        target_path = os.path.join(archive_path, self.date.year)
+        target_file = os.path.join(archive_path, self.date.year, filename)
+        if not os.path.isdir(target_path):
+            os.makedirs(target_path)
 
-        # rename and move file
-        if os.path.isfile('{}/{}'.format(path, filename)):
+        # rename and move/copy file
+        if os.path.isfile(target_file):
             raise RuntimeError('File already exists!')
-        os.rename(self._file, '{}/{}'.format(path, filename))
+
+        self._copyfile = True
+        if self._copyfile:
+            copyfile(self._file, target_file)
+        else:
+            move(self._file, target_file)
 
 
 def _strnorm(sz):
@@ -271,6 +296,26 @@ def _strnorm(sz):
     sz = sz.replace('ü', 'ue')
     sz = sz.replace('ß', 'ss')
     return sz
+
+
+def glob_directory(path_or_paths, file_extension):
+
+    if type(path_or_paths) is str:
+        path_or_paths = [path_or_paths]
+
+    file_list = []
+    for path in path_or_paths:
+        path = os.path.expanduser(path)
+        if not os.path.isdir(path):
+            raise Exception('Path does not exist')
+
+        file_list = file_list + glob.glob(os.path.join(path,
+                                                       '**',
+                                                       '*' +
+                                                       file_extension),
+                                          recursive=True)
+
+    return file_list
 
 
 if __name__ == '__main__':

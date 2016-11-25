@@ -1,3 +1,11 @@
+[Defaults]
+
+; Copy or move files to the archive
+copy_or_move            = copy
+
+; When processing directores, recurse into subdirs
+recursive_directories   = True
+
 [Directories]
 
 ; Multiple input paths can be defined by being placed in a JSON list
