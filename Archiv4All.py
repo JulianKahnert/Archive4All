@@ -93,6 +93,16 @@ class ArchiveToolkit:
         if self.archive_path is None:
             raise Exception('No output path specified.')
 
+        self._gather_archive_tags = self._config['Defaults'].getboolean(
+            'gather_archive_tags', 'False')
+        self._sort_gathered_tags = self._config['Defaults'].getboolean(
+            'sort_gathered_tags', 'False')
+        self._overwrite_config_tags = self._config['Defaults'].getboolean(
+            'overwrite_config_tags', 'False')
+
+        if self._gather_archive_tags:
+            self.gather_tags_from_archive()
+
         self.tag_list = list(self._config['Tags'].keys())
         if len(self.tag_list) == 0:
             raise Exception('No tags specified.')
@@ -266,9 +276,7 @@ class ArchiveToolkit:
 
         obj.write_file()
 
-    def gather_tags_from_archive(self,
-                                 overwrite_existing=False,
-                                 sort_tag_list=False):
+    def gather_tags_from_archive(self):
 
         archive_files = glob_directory(self.archive_path, self._file_extension)
 
@@ -280,12 +288,12 @@ class ArchiveToolkit:
                 if tag not in gathered_tags:
                     gathered_tags.append(tag)
 
-        if overwrite_existing:
+        if self._overwrite_config_tags:
             self.tag_list = gathered_tags
         else:
             self.tag_list = self.tag_list + gathered_tags
 
-        if sort_tag_list:
+        if self._sort_gathered_tags:
             self.tag_list = sort(self.tag_list)
 
     def parse_archive_file(self, file_path):
