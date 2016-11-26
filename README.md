@@ -30,18 +30,6 @@ Requirement for `tag.py`: `brew install tag`
 ./tags.py --mac-tags    # update macOS tags: Archiv => macOS Finder tags
 ```
 
-### `config.ini` example
-```
-[dir]
-archiv_path = ~/Downloads/test_archiv/
-
-[tags]
-tag1
-tag2
-tag3
-
-```
-
 -------
 
 # OCR

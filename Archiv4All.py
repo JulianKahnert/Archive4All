@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import collections
 import configparser
 from datetime import date
 from datetime import datetime
@@ -92,41 +93,14 @@ class ArchiveToolkit:
         if self.archive_path is None:
             raise Exception('No output path specified.')
 
-        self._gather_archive_tags = self._config['Defaults'].getboolean(
-            'gather_archive_tags', 'False')
-        self._sort_gathered_tags = self._config['Defaults'].getboolean(
-            'sort_gathered_tags', 'False')
-        self._overwrite_config_tags = self._config['Defaults'].getboolean(
-            'overwrite_config_tags', 'False')
+        self._movefile = self._config['Defaults'].get('copy_or_move') == 'move'
+        self._yearly_subfolder = self._config['Defaults'].getboolean('yearly_subfolder', 'False')
+        self._add_mac_tags = self._config['Defaults'].getboolean('add_mac_tags', 'False')
+        self._num_tags_top = self._config['Defaults'].getint('num_top_tags')
 
-        if self._gather_archive_tags:
-            self.gather_tags_from_archive()
-
-        self.tag_list = list(self._config['Tags'].keys())
+        self.gather_tags_from_archive()
         if len(self.tag_list) == 0:
             raise Exception('No tags specified.')
-
-        self._movefile = self._config['Defaults'].get('copy_or_move') == 'move'
-        self._yearly_subfolder = self._config['Defaults'].get('yearly_subfolder') == 'True'
-        self._add_mac_tags = self._config['Defaults'].get('add_mac_tags') == 'True'
-
-    def update_config_file(self, add_tag=[], delete_tag=[], sort_tags=False):
-        for item in add_tag:
-            self.tag_list.append(add_tag)
-        for item in delete_tag:
-            self.tag_list.remove(item)
-
-        if sort_tags:
-            self.tag_list.sort()
-
-        self._config.remove_section('Tags')
-        self._config.add_section('Tags')
-        for cur_tag in self.tag_list:
-            self._config.set('Tags', cur_tag)
-
-        with open(self._config_path, 'w') as configfile:
-            self._config.write(configfile)
-        self.parse_config_file()
 
     def parse_command_line(self):
         parser = argparse.ArgumentParser(description='''
@@ -244,10 +218,26 @@ class ArchiveToolkit:
         # TODO: error if empty
 
         # set tags
+        ## config tags
         print('\nID: name')
-        print('-' * 10)
-        for idx, cur_tag in enumerate(self.tag_list):
+        print('=' * 10)
+        for idx, cur_tag in enumerate(self.tag_list_config):
             print('{}: {}'.format(idx, cur_tag))
+
+        ## top tags
+        print('-' * 10)
+        # order of elements not relevant!?
+        tag_list_top = list(set(self.tag_list_top) - set(self.tag_list_config))
+        tag_list_top.sort()
+        for idx, cur_tag in enumerate(tag_list_top):
+            print('{}: {}'.format(idx + len(self.tag_list_config), cur_tag))
+
+        ## other tags
+        print('-' * 10)
+        tag_list_other = list(set(self.tag_list) - set(self.tag_list_config + self.tag_list_top))
+        tag_list_other.sort()
+        for idx, cur_tag in enumerate(tag_list_other):
+            print('{}: {}'.format(idx + len(self.tag_list_config + self.tag_list_top), cur_tag))
 
         obj.tags = []
         while True:
@@ -263,8 +253,22 @@ class ArchiveToolkit:
             matched_numeral = re.match('^(\d+)$', ans)
             if matched_numeral is not None:
                 try:
-                    obj.tags.append(self.tag_list[
-                        int(matched_numeral.group(0))])
+                    idx = int(matched_numeral.group(0))
+                    # chosen: config tag
+                    if idx < len(self.tag_list_config):
+                        obj.tags.append(self.tag_list_config[idx])
+
+                    # chosen: top tag
+                    elif len(self.tag_list_config) <= idx < len(self.tag_list_config + self.tag_list_top):
+                        idx -= len(self.tag_list_config)
+                        obj.tags.append(tag_list_top[idx])
+
+                    # chosen: other tag
+                    else:
+                        idx -= len(self.tag_list_top)
+                        idx -= len(self.tag_list_config)
+                        obj.tags.append(tag_list_other[idx])
+
                 except IndexError:
                     print('No tag with that ID.')
                     continue
@@ -273,29 +277,27 @@ class ArchiveToolkit:
             else:
                 ans = ans.lower()
                 obj.tags.append(ans)
-                self.update_config_file(add_tag=ans)
+                self.gather_tags_from_archive()
 
         obj.write_file()
 
     def gather_tags_from_archive(self):
+        # get all tags from archive
+        all_tags = []
+        for cur_file in glob_directory(self.archive_path, self._file_extension):
+            _, _, file_tags = self.parse_archive_file(cur_file)
+            all_tags += file_tags
 
-        archive_files = glob_directory(self.archive_path, self._file_extension)
+        self.tag_list = list(set(all_tags))
+        self.tag_list.sort()
 
-        gathered_tags = []
-        for file_path in archive_files:
-            tmp, tmp, file_tags = self.parse_archive_file(file_path)
+        # get the TopX of the archive tags
+        self.tag_list_top = []
+        for name, _ in collections.Counter(all_tags).most_common(self._num_tags_top):
+            self.tag_list_top.append(name)
 
-            for tag in file_tags:
-                if tag not in gathered_tags:
-                    gathered_tags.append(tag)
-
-        if self._overwrite_config_tags:
-            self.tag_list = gathered_tags
-        else:
-            self.tag_list = self.tag_list + gathered_tags
-
-        if self._sort_gathered_tags:
-            self.tag_list = sort(self.tag_list)
+        # get tags from config
+        self.tag_list_config = list(self._config['Tags'].keys())
 
     def parse_archive_file(self, file_path):
         file_name = os.path.basename(file_path)[:-
