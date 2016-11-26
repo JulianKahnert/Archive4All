@@ -61,6 +61,10 @@ class ArchiveToolkit:
     _config_file = 'config.ini'
     _config_file_example = 'config.ini.example'
     _file_extension = '.pdf'
+    _date_format = '%Y-%m-%d'
+    _date_sep = '--'
+    _tags_sep = '__'
+    _tag_sep = '_'
 
     file_list = []
 
@@ -87,6 +91,16 @@ class ArchiveToolkit:
                             self._config['Directories'].get('output_path'))
         if self.archive_path is None:
             raise Exception('No output path specified.')
+
+        self._gather_archive_tags = self._config['Defaults'].getboolean(
+            'gather_archive_tags', 'False')
+        self._sort_gathered_tags = self._config['Defaults'].getboolean(
+            'sort_gathered_tags', 'False')
+        self._overwrite_config_tags = self._config['Defaults'].getboolean(
+            'overwrite_config_tags', 'False')
+
+        if self._gather_archive_tags:
+            self.gather_tags_from_archive()
 
         self.tag_list = list(self._config['Tags'].keys())
         if len(self.tag_list) == 0:
@@ -263,6 +277,45 @@ class ArchiveToolkit:
 
         obj.write_file()
 
+    def gather_tags_from_archive(self):
+
+        archive_files = glob_directory(self.archive_path, self._file_extension)
+
+        gathered_tags = []
+        for file_path in archive_files:
+            tmp, tmp, file_tags = self.parse_archive_file(file_path)
+
+            for tag in file_tags:
+                if tag not in gathered_tags:
+                    gathered_tags.append(tag)
+
+        if self._overwrite_config_tags:
+            self.tag_list = gathered_tags
+        else:
+            self.tag_list = self.tag_list + gathered_tags
+
+        if self._sort_gathered_tags:
+            self.tag_list = sort(self.tag_list)
+
+    def parse_archive_file(self, file_path):
+        file_name = os.path.basename(file_path)[:-
+                                                len(self._file_extension)]
+
+        name_regex = re.match('(.*){}(.*){}(.*)'.format(self._date_sep,
+                                                        self._tags_sep),
+                              file_name)
+
+        if name_regex is None:
+            raise Exception('File name cannot be parsed.')
+            # TODO: Turn into soft error?
+
+        file_date = datetime.strptime(name_regex.group(1),
+                                      self._date_format).date()
+        file_name = name_regex.group(2)
+        file_tags = name_regex.group(3).split(self._tag_sep)
+
+        return file_date, file_name, file_tags
+
 
 class ArchiveFile:
     def __init__(self, toolkit, file_in):
@@ -279,12 +332,17 @@ class ArchiveFile:
 
     def write_file(self):
         # TODO: error checking would be nice
-        date = self.date.strftime('%Y-%m-%d')
+        date = self.date.strftime(self._toolkit._date_format)
         name = _strnorm(self.name)
         self.tags.sort()
-        tags = '_'.join(self.tags)
-        ext = os.path.splitext(self._file)[-1][1:]
-        filename = '{}--{}__{}.{}'.format(date, name, tags, ext)
+        tags = self._toolkit._tag_sep.join(self.tags)
+        ext = os.path.splitext(self._file)[-1]
+        filename = '{}{}{}{}{}{}'.format(date,
+                                         self._toolkit._date_sep,
+                                         name,
+                                         self._toolkit._tags_sep,
+                                         tags,
+                                         ext)
 
         # archive files in yearly subfolders
         if self._toolkit._yearly_subfolder:

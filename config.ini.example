@@ -12,6 +12,15 @@ yearly_subfolder        = False
 ; Add file attributes to newly archived files
 add_mac_tags            = False
 
+; Add all used tags from from the archive
+gather_archive_tags     = False
+
+; Sort the tags from the archive alphabetically
+sort_gathered_tags      = False
+
+; Overwrite the tag list from this config file
+overwrite_config_tags   = False
+
 
 [Directories]
 
