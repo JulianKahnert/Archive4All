@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 
+import argparse
 import configparser
 from datetime import date
 from datetime import datetime
 import glob
-import os
-from subprocess import Popen
-import sys
-from tqdm import tqdm
-import argparse
 import json
-from shutil import copyfile, move
+import os
 import re
+from shutil import copyfile, move
+from subprocess import Popen, PIPE
+from tqdm import tqdm
 
 
 # Partly inspired by https://stackoverflow.com/a/11415816/1177851
@@ -94,7 +93,8 @@ class ArchiveToolkit:
             raise Exception('No tags specified.')
 
         self._movefile = self._config['Defaults'].get('copy_or_move') == 'move'
-        self._yearly_subfolder = bool(self._config['Defaults'].get('yearly_subfolder'))
+        self._yearly_subfolder = self._config['Defaults'].get('yearly_subfolder') == 'True'
+        self._add_mac_tags = self._config['Defaults'].get('add_mac_tags') == 'True'
 
     def update_config_file(self, add_tag=[], delete_tag=[], sort_tags=False):
         for item in add_tag:
@@ -310,6 +310,29 @@ class ArchiveFile:
         else:
             copyfile(self._file, target_file)
 
+        if self._toolkit._add_mac_tags:
+            update_mac_tags(target_file)
+
+def update_mac_tags(file_path):
+    p = Popen(['tag', '--list', '--garrulous', '--no-name', file_path], stdout=PIPE)
+    file_tags = p.stdout.read().decode("utf-8")[:-1]
+    file_tags = set(file_tags.split('\n'))
+    name_tags = set(name2tags(file_path))
+
+    # delete tags from attr
+    for attr in file_tags - name_tags:
+        Popen(['tag', '--remove', attr, file_path])
+
+    # add tags to attr
+    for attr in name_tags - file_tags:
+        Popen(['tag', '--add', attr, file_path])
+
+def name2tags(file):
+    # list all files (not just pdf files)
+    file = file.split(os.path.dirname(file) + '/')[1]   # filename
+    file = file.split('__')[1]                          # tags + ext
+    file = file.split('.')[0]                           # tags
+    return file.split('_')
 
 def _strnorm(sz):
     sz = sz.lower()

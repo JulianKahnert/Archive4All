@@ -6,8 +6,12 @@ copy_or_move            = copy
 ; When processing directores, recurse into subdirs
 recursive_directories   = True
 
-; Copy/move file in "output_path/YEAR/"
+; Copy/move file in "output_path/YEAR/date--name__tag"
 yearly_subfolder        = False
+
+; Add file attributes to newly archived files
+add_mac_tags            = False
+
 
 [Directories]
 
