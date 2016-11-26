@@ -62,6 +62,10 @@ class ArchiveToolkit:
     _config_file = 'config.ini'
     _config_file_example = 'config.ini.example'
     _file_extension = '.pdf'
+    _date_format = '%Y-%m-%d'
+    _date_sep = '--'
+    _tags_sep = '__'
+    _tag_sep = '_'
 
     file_list = []
 
@@ -278,12 +282,17 @@ class ArchiveFile:
 
     def write_file(self):
         # TODO: error checking would be nice
-        date = self.date.strftime('%Y-%m-%d')
+        date = self.date.strftime(self._toolkit._date_format)
         name = _strnorm(self.name)
         self.tags.sort()
-        tags = '_'.join(self.tags)
-        ext = os.path.splitext(self._file)[-1][1:]
-        filename = '{}--{}__{}.{}'.format(date, name, tags, ext)
+        tags = self._toolkit._tag_sep.join(self.tags)
+        ext = os.path.splitext(self._file)[-1]
+        filename = '{}{}{}{}{}{}'.format(date,
+                                         self._toolkit._date_sep,
+                                         name,
+                                         self._toolkit._tags_sep,
+                                         tags,
+                                         ext)
 
         # create a new directory if it does not already exist
         target_path = os.path.join(self._toolkit.archive_path,
