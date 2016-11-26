@@ -94,6 +94,7 @@ class ArchiveToolkit:
             raise Exception('No tags specified.')
 
         self._movefile = self._config['Defaults'].get('copy_or_move') == 'move'
+        self._yearly_subfolder = bool(self._config['Defaults'].get('yearly_subfolder'))
 
     def update_config_file(self, add_tag=[], delete_tag=[], sort_tags=False):
         for item in add_tag:
@@ -285,11 +286,17 @@ class ArchiveFile:
         ext = os.path.splitext(self._file)[-1][1:]
         filename = '{}--{}__{}.{}'.format(date, name, tags, ext)
 
+        # archive files in yearly subfolders
+        if self._toolkit._yearly_subfolder:
+            year_dir = self.date.strftime('%Y')
+        else:
+            year_dir = ''
+
         # create a new directory if it does not already exist
         target_path = os.path.join(self._toolkit.archive_path,
-                                   self.date.strftime('%Y'))
+                                   year_dir)
         target_file = os.path.join(self._toolkit.archive_path,
-                                   self.date.strftime('%Y'), filename)
+                                   year_dir, filename)
 
         if not os.path.isdir(target_path):
             os.makedirs(target_path)

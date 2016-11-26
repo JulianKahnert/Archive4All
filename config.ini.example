@@ -6,6 +6,9 @@ copy_or_move            = copy
 ; When processing directores, recurse into subdirs
 recursive_directories   = True
 
+; Copy/move file in "output_path/YEAR/"
+yearly_subfolder        = False
+
 [Directories]
 
 ; Multiple input paths can be defined by being placed in a JSON list
