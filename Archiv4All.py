@@ -266,6 +266,47 @@ class ArchiveToolkit:
 
         obj.write_file()
 
+    def gather_tags_from_archive(self,
+                                 overwrite_existing=False,
+                                 sort_tag_list=False):
+
+        archive_files = glob_directory(self.archive_path, self._file_extension)
+
+        gathered_tags = []
+        for file_path in archive_files:
+            tmp, tmp, file_tags = self.parse_archive_file(file_path)
+
+            for tag in file_tags:
+                if tag not in gathered_tags:
+                    gathered_tags.append(tag)
+
+        if overwrite_existing:
+            self.tag_list = gathered_tags
+        else:
+            self.tag_list = self.tag_list + gathered_tags
+
+        if sort_tag_list:
+            self.tag_list = sort(self.tag_list)
+
+    def parse_archive_file(self, file_path):
+        file_name = os.path.basename(file_path)[:-
+                                                len(self._file_extension)]
+
+        name_regex = re.match('(.*){}(.*){}(.*)'.format(self._date_sep,
+                                                        self._tags_sep),
+                              file_name)
+
+        if name_regex is None:
+            raise Exception('File name cannot be parsed.')
+            # TODO: Turn into soft error?
+
+        file_date = datetime.strptime(name_regex.group(1),
+                                      self._date_format).date()
+        file_name = name_regex.group(2)
+        file_tags = name_regex.group(3).split(self._tag_sep)
+
+        return file_date, file_name, file_tags
+
 
 class ArchiveFile:
     def __init__(self, toolkit, file_in):
