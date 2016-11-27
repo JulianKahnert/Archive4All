@@ -197,26 +197,26 @@ class ArchiveToolkit:
         # save creation time of file as default
 
         # set year
-        year = input('Year [{}]: '.format(obj.file_date.year))
-        year = year or obj.file_date.year
+        year = input('Year [{}]: '.format(obj.date.year))
+        year = year or obj.date.year
         year = int(year)
         if year < 100:
             year += 2000
 
         # set month
-        month = input('Month [{}]: '.format(obj.file_date.month))
-        month = month or obj.file_date.month
+        month = input('Month [{}]: '.format(obj.date.month))
+        month = month or obj.date.month
         month = int(month)
 
         # set day
-        day = input('Day [{}]: '.format(obj.file_date.day))
-        day = day or obj.file_date.day
+        day = input('Day [{}]: '.format(obj.date.day))
+        day = day or obj.date.day
         day = int(day)
         obj.date = date(year, month, day)
 
         # set name
-        obj.name = input('Name: ')
-        # TODO: error if empty
+        name = input('Name [{}]: '.format(obj.name))
+        obj.name = name or obj.name
 
         # set tags
         ## config tags
@@ -240,6 +240,8 @@ class ArchiveToolkit:
         for idx, cur_tag in enumerate(tag_list_other):
             print('{}: {}'.format(idx + len(self.tag_list_config + self.tag_list_top), cur_tag))
 
+        #TODO: tags is not empty here, if parsing was successful
+        #      set them as default tags, when there is a UI to remove tags
         obj.tags = []
         while True:
             print('\ncurrent tags:')
@@ -326,12 +328,14 @@ class ArchiveFile:
         self._file = file_in
         self._toolkit = toolkit
         self._basepath = os.path.dirname(os.path.realpath(__file__))
-        self.file_date = datetime.fromtimestamp(os.path.getctime(self._file))
 
-        # file attributes
-        self.date = None
-        self.name = None
-        self.tags = None
+        # try to parse data from filename
+        try:
+            self.date, self.name, self.tags = self._toolkit.parse_archive_file(file_in)
+        except Exception:
+            self.date = datetime.fromtimestamp(os.path.getctime(self._file))
+            self.name = ''
+            self.tags = []
 
     def write_file(self):
         # TODO: error checking would be nice

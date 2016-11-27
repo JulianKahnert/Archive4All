@@ -16,17 +16,22 @@ def name2tags(file):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description='Commandline tool to manipulate tags in archiv. You will find the path to the archiv in your "config.ini"!')
-
-    parser.add_argument('-c', '--config',
-                        dest='config',
-                        action='store_true',
-                        help='update tags: Archiv => config.ini')
+        description='Commandline tool to manipulate tags in archive. You will find the path to the archiv in your "config.ini"!')
 
     parser.add_argument('-mt', '--mac-tags',
                         dest='mac_tags',
                         action='store_true',
-                        help='update macOS tags: Archiv => macOS Finder tags')
+                        help='update macOS tags: Archive => macOS Finder tags')
+
+    parser.add_argument('-ocr', '--ocr',
+                        dest='ocr',
+                        action='store_true',
+                        help='run OCR on files in archive')
+
+    parser.add_argument('-focr', '--force-ocr',
+                        dest='force_ocr',
+                        action='store_true',
+                        help='renew OCR on files in archive (--ocr flag required)')
 
     args = parser.parse_args()
 
@@ -37,25 +42,18 @@ if __name__ == '__main__':
     config.read(config_path)
     archiv_path = os.path.expanduser(config['Directories']['output_path'])
 
-    if args.config:
-        # get all tags
-        tag_list = []
-        for cur_file in glob.glob(archiv_path + '/**/*.*', recursive=True):
-            tag_list += name2tags(cur_file)
-        tag_list = list(set(tag_list))
-        tag_list.sort()
+    if args.ocr:
+        for cur_file in glob.glob(archiv_path + '**/*.*', recursive=True):
+            command = 'ocrmypdf --language deu+eng --rotate-pages --deskew --output-type pdfa --oversample 600 --clean '
 
-        # renew tags in config.ini
-        config.remove_section('Tags')
-        config.add_section('Tags')
-        print('All tags in archiv:\n' + '-'*20)
-        for cur_tag in tag_list:
-            print('{}: {}'.format(tag_list.index(cur_tag), cur_tag))
-            config.set('Tags', cur_tag)
+            if args.force_ocr:
+                command += '--force-ocr '
+            else:
+                command += '--skip-text '
+            command += '"{}" "{}"'.format(cur_file, cur_file)
 
-        # write new config.ini
-        with open(config_path, 'w') as configfile:
-            config.write(configfile)
+            print(command)
+            os.system(command)
 
     if args.mac_tags:
         # store number of deleted and added tags
