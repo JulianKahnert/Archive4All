@@ -9,15 +9,15 @@ date--name__tag1_tag2_tagN.pdf
 # Archive
 ### Onboarding
 * install **tqdm** with `pip3 install tqdm`
-* Generate new config file with `./Archive4All.py --new-config`
+* Generate new config file with `./archive.py --new-config`
 * adjust the `./config.ini` file to fit your needs
 * optional (needed for OCR tasks): [install ocrmypdf](https://ocrmypdf.readthedocs.io/en/latest/installation.html)
 * optional (needed for macOS Finder tags): install **tag** with `brew install tag`
 
 ### Workflow
-Requirement for `Archive4All.py`: `pip3 install tqdm`
+Requirement for `archive.py`: `pip3 install tqdm`
 
-`./Archive4All.py /PATH/TO/FILE/OR/FOLDER/`
+`./archive.py /PATH/TO/FILE/OR/FOLDER/`
 
 * **year:** 2016 or 16 possible
 * **name:** `capital letters, ' ', ä, ö, ü, ß` will be replaced
@@ -26,9 +26,9 @@ Requirement for `Archive4All.py`: `pip3 install tqdm`
     * finish tagging with empty input
 
 ### Maintenance of archive
-* update macOS Finder tags: `ArchiveMaintenance.py --mac-tags`
-* generate missing OCR: `ArchiveMaintenance.py --ocr`
-* renew all OCR: `ArchiveMaintenance.py --ocr --force-ocr`
+* update macOS Finder tags: `maintenance.py --mac-tags`
+* generate missing OCR: `maintenance.py --ocr`
+* renew all OCR: `maintenance.py --ocr --force-ocr`
 
 -------
 
