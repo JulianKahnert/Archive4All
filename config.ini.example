@@ -15,6 +15,9 @@ add_mac_tags            = False
 ; Set a number of most common tags
 num_top_tags            = 10
 
+; flag which will be run in: $ open -a {open_pdf_in} --background /PATH/TO/file.pdf
+open_pdf_in             = firefox
+
 
 [Directories]
 

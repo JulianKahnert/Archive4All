@@ -97,6 +97,7 @@ class ArchiveToolkit:
         self._yearly_subfolder = self._config['Defaults'].getboolean('yearly_subfolder', 'False')
         self._add_mac_tags = self._config['Defaults'].getboolean('add_mac_tags', 'False')
         self._num_tags_top = self._config['Defaults'].getint('num_top_tags')
+        self._open_pdf_in = self._config['Defaults'].get('open_pdf_in')
 
         self.gather_tags_from_archive()
         if len(self.tag_list) == 0:
@@ -191,7 +192,7 @@ class ArchiveToolkit:
 
     def q_and_a(self, file_path):
         print('>>>  ' + file_path.split(os.path.dirname(file_path) + '/')[1])
-        p = Popen(['open', '--background', '-a', 'safari', file_path])
+        p = Popen(['open', '--background', '-a', self._open_pdf_in, file_path])
         obj = ArchiveFile(self, file_path)
         # save creation time of file as default
 
