@@ -335,7 +335,7 @@ class ArchiveFile:
         except Exception:
             self.date = datetime.fromtimestamp(os.path.getctime(self._file))
             self.name = ''
-            self.tags = ''
+            self.tags = []
 
     def write_file(self):
         # TODO: error checking would be nice
