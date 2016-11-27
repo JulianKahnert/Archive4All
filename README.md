@@ -13,6 +13,7 @@ Toolkit for file tagging and archiving tasks.
 # Archiv
 ### Workflow
 Requirement for `Archiv4All.py`: `pip3 install tqdm`
+
 `./Archiv4All.py /PATH/TO/FILE/OR/FOLDER/`
 
 * **year:** 2016 or 16 possible
@@ -28,18 +29,6 @@ Requirement for `tag.py`: `brew install tag`
 ./tags.py --help        # show this help message and exit
 ./tags.py --config      # update tags: Archiv => config.ini
 ./tags.py --mac-tags    # update macOS tags: Archiv => macOS Finder tags
-```
-
-### `config.ini` example
-```
-[dir]
-archiv_path = ~/Downloads/test_archiv/
-
-[tags]
-tag1
-tag2
-tag3
-
 ```
 
 -------

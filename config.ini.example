@@ -6,6 +6,19 @@ copy_or_move            = copy
 ; When processing directores, recurse into subdirs
 recursive_directories   = True
 
+; Copy/move file in "output_path/YEAR/date--name__tag"
+yearly_subfolder        = False
+
+; Add file attributes to newly archived files
+add_mac_tags            = False
+
+; Set a number of most common tags
+num_top_tags            = 10
+
+; flag which will be run in: $ open -a {open_pdf_in} --background /PATH/TO/file.pdf
+open_pdf_in             = firefox
+
+
 [Directories]
 
 ; Multiple input paths can be defined by being placed in a JSON list
