@@ -29,6 +29,12 @@ Requirement for `archive.py`: `pip3 install tqdm`
 * update macOS Finder tags: `maintenance.py --mac-tags`
 * generate missing OCR: `maintenance.py --ocr`
 * renew all OCR: `maintenance.py --ocr --force-ocr`
+* show all OCR output: `maintenance.py --ocr --verbose`
+* possible crontab entries:
+```
+@daily              /PATH/TO/Archive4All/maintenance.py --mac-tags &> /dev/null
+0   4   1   *   *   /PATH/TO/Archive4All/maintenance.py --ocr &> /dev/null
+```
 
 -------
 

@@ -5,6 +5,7 @@ import configparser
 import glob
 import os
 from subprocess import PIPE, Popen
+from tqdm import tqdm
 
 
 def name2tags(file):
@@ -33,6 +34,11 @@ if __name__ == '__main__':
                         action='store_true',
                         help='renew OCR on files in archive (--ocr flag required)')
 
+    parser.add_argument('-v', '--verbose',
+                        dest='verbose',
+                        action='store_true',
+                        help='show output of "ocrmypdf", which handles all the OCR stuff')
+
     args = parser.parse_args()
 
     basepath = os.path.dirname(os.path.realpath(__file__))
@@ -43,7 +49,7 @@ if __name__ == '__main__':
     archiv_path = os.path.expanduser(config['Directories']['output_path'])
 
     if args.ocr:
-        for cur_file in glob.glob(archiv_path + '**/*.*', recursive=True):
+        for cur_file in tqdm(glob.glob(archiv_path + '**/*.*', recursive=True)):
             command = 'ocrmypdf --language deu+eng --rotate-pages --deskew --output-type pdfa --oversample 600 --clean '
 
             if args.force_ocr:
@@ -52,7 +58,9 @@ if __name__ == '__main__':
                 command += '--skip-text '
             command += '"{}" "{}"'.format(cur_file, cur_file)
 
-            print(command)
+            if not args.verbose:
+                command += ' &> /dev/null'
+
             os.system(command)
 
     if args.mac_tags:
@@ -60,7 +68,7 @@ if __name__ == '__main__':
         num_del_tags = 0
         num_add_tags = 0
 
-        for cur_file in glob.glob(archiv_path + '/**/*.*', recursive=True):
+        for cur_file in tqdm(glob.glob(archiv_path + '/**/*.*', recursive=True)):
             p = Popen(['tag', '--list', '--garrulous', '--no-name', cur_file], stdout=PIPE)
             attr_tags = p.stdout.read().decode("utf-8")[:-1]
             attr_tags = set(attr_tags.split('\n'))
