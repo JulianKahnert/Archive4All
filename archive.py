@@ -280,7 +280,8 @@ class ArchiveToolkit:
             else:
                 ans = ans.lower()
                 obj.tags.append(ans)
-                self.gather_tags_from_archive()
+                self.tag_list.append(ans)
+                self.tag_list.sort()
 
         obj.write_file()
 
