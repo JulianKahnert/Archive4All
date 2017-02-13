@@ -8,12 +8,13 @@ from subprocess import PIPE, Popen
 from tqdm import tqdm
 
 
-def name2tags(file):
+def name2tags(file_path):
     # list all files (not just pdf files)
-    file = file.split(os.path.dirname(file) + '/')[1]   # filename
-    file = file.split('__')[1]                          # tags + ext
-    file = file.split('.')[0]                           # tags
-    return file.split('_')
+    file_path = file_path.split(os.path.dirname(file_path) + '/')[1]    # filename
+    file_path = file_path.split('__')[1]                                # tags + ext
+    file_path = file_path.split('.')[0]                                 # tags
+    return file_path.split('_')
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(

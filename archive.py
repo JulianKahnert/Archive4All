@@ -57,7 +57,7 @@ class append_readable_file(argparse.Action):
                 setattr(namespace, self.dest, file_list)
 
 
-class ArchiveToolkit:
+class ArchiveToolkit(object):
 
     _config_file = 'config.ini'
     _config_file_example = 'config.ini.example'
@@ -88,8 +88,7 @@ class ArchiveToolkit:
         self.file_list = self.file_list + glob_directory(input_paths,
                                                          self._file_extension)
 
-        self.archive_path = os.path.expanduser(
-                            self._config['Directories'].get('output_path'))
+        self.archive_path = os.path.expanduser(self._config['Directories'].get('output_path'))
         if self.archive_path is None:
             raise Exception('No output path specified.')
 
@@ -105,7 +104,7 @@ class ArchiveToolkit:
 
     def parse_command_line(self):
         parser = argparse.ArgumentParser(description='''
-            Archive4All – Toolkit for file tagging and archiving tasks.
+            Archive4All - Toolkit for file tagging and archiving tasks.
                                          ''',
                                          fromfile_prefix_chars="@")
         parser.add_argument('-d', '--dir',
@@ -156,7 +155,6 @@ class ArchiveToolkit:
             if os.path.isfile(self._config_path):
                 raise Exception('Config file already exists.')
 
-            from shutil import copyfile
             copyfile(os.path.join(self._basepath, self._config_file_example),
                      os.path.join(self._basepath, self._config_file))
 
@@ -174,7 +172,7 @@ class ArchiveToolkit:
         Main method to run everything in ArchiveToolkit the way it's
         intended to be. When called directly (not from inside another Python
         function or shell) this function handles parsing of config, command
-        line arguments, and –after that— the processing of the given files.
+        line arguments, and -after that- the processing of the given files.
         """
 
         self.parse_command_line()
@@ -192,7 +190,7 @@ class ArchiveToolkit:
 
     def q_and_a(self, file_path):
         print('>>>  ' + file_path.split(os.path.dirname(file_path) + '/')[1])
-        p = Popen(['open', '--background', '-a', self._open_pdf_in, file_path])
+        Popen(['open', '--background', '-a', self._open_pdf_in, file_path])
         obj = ArchiveFile(self, file_path)
         # save creation time of file as default
 
@@ -219,13 +217,13 @@ class ArchiveToolkit:
         obj.name = name or obj.name
 
         # set tags
-        ## config tags
+        # # config tags
         print('\nID: name')
         print('=' * 10)
         for idx, cur_tag in enumerate(self.tag_list_config):
             print('{}: {}'.format(idx, cur_tag))
 
-        ## top tags
+        # # top tags
         print('-' * 10)
         # order of elements not relevant!?
         tag_list_top = list(set(self.tag_list_top) - set(self.tag_list_config))
@@ -233,15 +231,15 @@ class ArchiveToolkit:
         for idx, cur_tag in enumerate(tag_list_top):
             print('{}: {}'.format(idx + len(self.tag_list_config), cur_tag))
 
-        ## other tags
+        # # other tags
         print('-' * 10)
         tag_list_other = list(set(self.tag_list) - set(self.tag_list_config + self.tag_list_top))
         tag_list_other.sort()
         for idx, cur_tag in enumerate(tag_list_other):
             print('{}: {}'.format(idx + len(self.tag_list_config + self.tag_list_top), cur_tag))
 
-        #TODO: tags is not empty here, if parsing was successful
-        #      set them as default tags, when there is a UI to remove tags
+        # TODO: tags is not empty here, if parsing was successful
+        #       set them as default tags, when there is a UI to remove tags
         obj.tags = []
         while True:
             print('\ncurrent tags:')
@@ -323,7 +321,7 @@ class ArchiveToolkit:
         return file_date, file_name, file_tags
 
 
-class ArchiveFile:
+class ArchiveFile(object):
     def __init__(self, toolkit, file_in):
         # TODO: relative path to absolute path?
         self._file = file_in
@@ -379,6 +377,7 @@ class ArchiveFile:
         if self._toolkit._add_mac_tags:
             update_mac_tags(target_file)
 
+
 def update_mac_tags(file_path):
     p = Popen(['tag', '--list', '--garrulous', '--no-name', file_path], stdout=PIPE)
     file_tags = p.stdout.read().decode("utf-8")[:-1]
@@ -393,12 +392,14 @@ def update_mac_tags(file_path):
     for attr in name_tags - file_tags:
         Popen(['tag', '--add', attr, file_path])
 
-def name2tags(file):
+
+def name2tags(file_path):
     # list all files (not just pdf files)
-    file = file.split(os.path.dirname(file) + '/')[1]   # filename
-    file = file.split('__')[1]                          # tags + ext
-    file = file.split('.')[0]                           # tags
-    return file.split('_')
+    file_path = file_path.split(os.path.dirname(file_path) + '/')[1]    # filename
+    file_path = file_path.split('__')[1]                                # tags + ext
+    file_path = file_path.split('.')[0]                                 # tags
+    return file_path.split('_')
+
 
 def _strnorm(sz):
     sz = sz.lower()
